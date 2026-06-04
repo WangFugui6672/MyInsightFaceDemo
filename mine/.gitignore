@@ -1,0 +1,19 @@
+# ONNX 模型权重（~30 MB），按需下载到本地
+models/buffalo_sc/
+models/buffalo_sc.zip
+models/buffalo_s/
+models/buffalo_l/
+
+# 人脸库 embedding（含生物特征信息）
+face_db.npz
+
+# 摄像头快照（含人脸）
+snapshots/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
