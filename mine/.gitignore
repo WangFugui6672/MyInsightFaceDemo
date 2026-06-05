@@ -7,6 +7,11 @@ models/buffalo_l/
 # 人脸库 embedding（含生物特征信息）
 face_db.npz
 
+# 后端数据库（含识别日志）
+backend/data/
+*.db
+*.db-journal
+
 # 摄像头快照（含人脸）
 snapshots/
 

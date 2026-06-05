@@ -18,6 +18,7 @@
 | 人脸识别   | MobileFaceNet @ 512 维 embedding，余弦相似度匹配    |
 | 注册管理   | 从文件夹构建本地人脸库，存储为 `face_db.npz`        |
 | 实时识别   | 打开本地摄像头，逐帧检测+识别+显示                  |
+| 后端记录   | 可选：把识别结果发送到 FastAPI，并写入 SQLite       |
 
 > **关键点定位 / 性别年龄**：`buffalo_sc` 不含这些模型。如需要请改用 `buffalo_s`（同等精度，+landmark+age）或 `buffalo_l`（精度更高，+landmark+age）。
 
@@ -35,6 +36,10 @@ planB/
 │   │   ├── DEPLOY.md      # 部署到其他电脑的指南
 │   │   └── FACE_RECOGNITION_TECH.md  # 人脸识别技术说明
 │   ├── requirements.txt   # pip 依赖清单
+│   ├── backend/           # FastAPI 后端接口，保存识别结果到 SQLite
+│   │   ├── main.py
+│   │   ├── README.md
+│   │   └── data/          # recognition.db 自动生成，已忽略
 │   ├── scripts/           # 双击脚本
 │   │   ├── setup.bat      # 双击 ① 装依赖（一次性）
 │   │   ├── run_register.bat  # 双击 ② 注册人脸
@@ -183,6 +188,41 @@ python test_recog_logic.py
 
 用 `samples/test_face.jpg` 模拟 3 帧输入，验证完整识别链路。
 
+### 5.5 启动后端并保存识别结果
+
+后端位于 `backend/`，使用 FastAPI 接收识别结果，使用 SQLite 保存记录。
+
+启动后端：
+
+```powershell
+cd mine
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+接口文档：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+数据库文件会自动生成在：
+
+```text
+mine/backend/data/recognition.db
+```
+
+启动摄像头识别并发送结果：
+
+```powershell
+python face_recog.py run --cam 0 --api http://127.0.0.1:8000/api/recognitions
+```
+
+默认同一个识别标签每 5 秒最多发送一次，避免每帧重复写入数据库。可用 `--api-interval` 调整：
+
+```powershell
+python face_recog.py run --cam 0 --api http://127.0.0.1:8000/api/recognitions --api-interval 3
+```
+
 ---
 
 ## 6. 关键参数
@@ -194,6 +234,8 @@ python test_recog_logic.py
 | `DB_PATH`      | `mine/face_db.npz`（自动锚定脚本目录）           | 注册库存储位置                                       |
 | `SNAPSHOT_DIR` | `mine/snapshots/`（自动锚定脚本目录）            | `s` 键保存路径                                       |
 | `THRESHOLD`    | `0.4`                                            | 余弦相似度阈值，>该值判为同一人；调高更严格         |
+| `--api`        | 无                                               | 可选：识别结果 POST 接口地址                         |
+| `--api-interval` | `5.0`                                          | 同一标签发送到后端的最小间隔秒数                    |
 | `IMG_EXTS`     | jpg/jpeg/png/bmp/webp                            | 注册时接受的图片后缀                                 |
 | `name`         | `"buffalo_sc"`                                   | 当前模型包（CPU 优化）                              |
 | `providers`    | `["CPUExecutionProvider"]`                       | 当前执行后端                                          |
@@ -238,6 +280,7 @@ APP.prepare(ctx_id=0, det_size=(480, 480))
 | ONNX 模型         | `mine/models/buffalo_sc/*.onnx`（解压后 16 MB）   | 否（公开模型）    | 公开仓库即可下载；已加入 `.gitignore`      |
 | 原始人脸照片      | `mine/known_faces/<名字>/*.jpg`                   | **是**            | 不要上传到云盘 / 仓库 / 聊天群              |
 | `face_db.npz`     | `mine/face_db.npz`                                | **是**            | 512 维向量，虽无法还原照片，但属生物特征     |
+| 后端识别日志      | `mine/backend/data/recognition.db`                | **是**            | 包含姓名、时间、摄像头编号、相似度，已加入 `.gitignore` |
 | `out.mp4` 录像    | 运行时所在目录（建议在 `mine/` 下运行）           | **是**            | 用完及时删除                               |
 | `snapshot_*.jpg`  | `mine/snapshots/`                                 | **是**            | 同上                                       |
 
@@ -322,6 +365,12 @@ python face_recog.py register
 # 实时识别
 python face_recog.py run --cam 0
 
+# 启动后端接口
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+# 实时识别并把结果发送到后端
+python face_recog.py run --cam 0 --api http://127.0.0.1:8000/api/recognitions
+
 # 录像
 python face_recog.py run --cam 0 --save out.mp4
 
@@ -346,9 +395,11 @@ insightface       == 1.0.1
 onnxruntime       == 1.24.4    (via onnxruntime-directml)
 opencv-python     == 4.13.0
 numpy             == 2.4.4
+fastapi           >= 0.110.0
+uvicorn           >= 0.27.0
 ```
 
-`pip install insightface opencv-python onnxruntime-directml numpy` 即可一键装齐。
+`python -m pip install -r requirements.txt` 即可一键装齐。
 
 > 当前依赖的是 `onnxruntime-directml`（不装普通 `onnxruntime`）。如果未来想换 CUDA，把 `onnxruntime-directml` 换成 `onnxruntime-gpu` + 装 CUDA toolkit 即可。
 

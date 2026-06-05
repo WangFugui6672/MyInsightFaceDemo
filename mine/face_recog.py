@@ -5,8 +5,11 @@ InsightFace 摄像头实时人脸识别
   python face_recog.py run --cam 0
 """
 import argparse
+import json
 import os
 import time
+import urllib.error
+import urllib.request
 import cv2
 import numpy as np
 import insightface
@@ -20,6 +23,22 @@ DB_PATH = os.path.join(SCRIPT_DIR, "face_db.npz")
 SNAPSHOT_DIR = os.path.join(SCRIPT_DIR, "snapshots")
 THRESHOLD = 0.4          # 余弦相似度阈值，>该值认为同一个人
 IMG_EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
+
+
+def post_recognition(api_url: str, payload: dict) -> bool:
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        api_url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=1.0) as resp:
+            return 200 <= resp.status < 300
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        print(f"[api warn] 发送识别结果失败: {exc}")
+        return False
 
 
 def get_app():
@@ -88,7 +107,7 @@ def register(folder: str) -> None:
 
 
 # ---------- 实时识别 ----------
-def run(cam_id: int, save_video: str = None) -> None:
+def run(cam_id: int, save_video: str = None, api_url: str = None, api_interval: float = 5.0) -> None:
     app = get_app()
     if not os.path.exists(DB_PATH):
         raise SystemExit(f"未找到 {DB_PATH}，请先 register")
@@ -115,6 +134,10 @@ def run(cam_id: int, save_video: str = None) -> None:
         writer = cv2.VideoWriter(save_video, fourcc, fps, (w, h))
         print(f"[info] 录制到 {save_video}")
 
+    last_sent = {}
+    if api_url:
+        print(f"[info] 识别结果将发送到 {api_url}，同一标签间隔 {api_interval:.1f}s")
+
     t0, frames, fps_disp = time.time(), 0, 0.0
     while True:
         ok, frame = cap.read()
@@ -135,6 +158,21 @@ def run(cam_id: int, save_video: str = None) -> None:
                 if score >= THRESHOLD:
                     label = str(names[best])
             color = (0, 255, 0) if label != "Unknown" else (0, 0, 255)
+
+            if api_url:
+                now = time.time()
+                key = (label, cam_id)
+                if now - last_sent.get(key, 0.0) >= api_interval:
+                    payload = {
+                        "name": label,
+                        "score": score,
+                        "status": "recognized" if label != "Unknown" else "unknown",
+                        "camera_id": cam_id,
+                        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    }
+                    if post_recognition(api_url, payload):
+                        last_sent[key] = now
+
             cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), color, 2)
             txt = f"{label} {score:.2f}" if label != "Unknown" else f"Unknown ({score:.2f})"
             (tw, th), _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
@@ -180,9 +218,11 @@ if __name__ == "__main__":
     p_run = sub.add_parser("run", help="打开摄像头实时识别")
     p_run.add_argument("--cam", type=int, default=0, help="摄像头设备 id，默认 0")
     p_run.add_argument("--save", default=None, help="可选：保存带标注的视频路径，如 out.mp4")
+    p_run.add_argument("--api", default=None, help="可选：识别结果 POST 接口，如 http://127.0.0.1:8000/api/recognitions")
+    p_run.add_argument("--api-interval", type=float, default=5.0, help="同一标签发送间隔秒数，默认 5")
     args = parser.parse_args()
 
     if args.mode == "register":
         register(args.folder)
     elif args.mode == "run":
-        run(args.cam, args.save)
+        run(args.cam, args.save, args.api, args.api_interval)
