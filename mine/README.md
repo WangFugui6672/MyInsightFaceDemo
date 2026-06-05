@@ -31,11 +31,14 @@ planB/
 │
 ├── mine/                  # ★ 我的项目（所有命令都在这里跑）
 │   ├── README.md          # 本文档
-│   ├── DEPLOY.md          # 部署到其他电脑的指南
+│   ├── docs/              # 说明文档
+│   │   ├── DEPLOY.md      # 部署到其他电脑的指南
+│   │   └── FACE_RECOGNITION_TECH.md  # 人脸识别技术说明
 │   ├── requirements.txt   # pip 依赖清单
-│   ├── setup.bat          # 双击 ① 装依赖（一次性）
-│   ├── run_register.bat   # 双击 ② 注册人脸
-│   ├── run_camera.bat     # 双击 ③ 开摄像头
+│   ├── scripts/           # 双击脚本
+│   │   ├── setup.bat      # 双击 ① 装依赖（一次性）
+│   │   ├── run_register.bat  # 双击 ② 注册人脸
+│   │   └── run_camera.bat # 双击 ③ 开摄像头
 │   ├── face_recog.py      # 主程序：register / run 两个子命令
 │   ├── face_analysis_demo.py
 │   ├── test_recog_logic.py
@@ -89,7 +92,7 @@ zip 下载后可以删掉，**ONNX 文件是实际用到的**。
 
 ## 5. 使用流程
 
-> **给其他电脑用（不是开发者）？** → 看 [DEPLOY.md](DEPLOY.md)，三个 `.bat` 双击就能跑。
+> **给其他电脑用（不是开发者）？** → 看 [docs/DEPLOY.md](docs/DEPLOY.md)，三个 `.bat` 双击就能跑。
 
 ### 5.1 注册人脸库
 

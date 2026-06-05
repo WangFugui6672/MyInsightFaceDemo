@@ -36,11 +36,11 @@ echo.
 
 REM 3) Install dependencies
 echo [2/2] Installing dependencies (insightface / opencv / onnxruntime-directml / numpy)...
-python -m pip install -r "%~dp0requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple
+python -m pip install -r "%~dp0..\requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple
 if errorlevel 1 (
     echo.
     echo [!] Tsinghua mirror failed, trying default PyPI ...
-    python -m pip install -r "%~dp0requirements.txt"
+    python -m pip install -r "%~dp0..\requirements.txt"
 )
 if errorlevel 1 (
     echo.
@@ -52,7 +52,7 @@ if errorlevel 1 (
 echo.
 echo ============================================================
 echo  [OK] Installation complete
-echo  Next step: double-click run_camera.bat to start camera
+echo  Next step: double-click scripts\run_camera.bat to start camera
 echo ============================================================
 pause
 endlocal
