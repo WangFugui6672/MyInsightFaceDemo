@@ -1,4 +1,4 @@
-# ONNX 模型权重（~30 MB），按需下载到本地
+# ONNX 模型权重（解压后 ~16 MB），按需下载到本地
 models/buffalo_sc/
 models/buffalo_sc.zip
 models/buffalo_s/

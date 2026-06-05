@@ -6,7 +6,7 @@
 
 把整个 `mine/` 文件夹复制到目标机器（U盘、网盘、共享文件夹都行）。
 
-**整个 mine/ 大约 410 MB**（绝大部分是 `models/buffalo_sc/*.onnx` 约 62 MB + `models/buffalo_sc.zip` 约 67 MB，剩余来自其他依赖/输出）。
+**整个 mine/ 大约 30 MB**（绝大部分是 `models/buffalo_sc/*.onnx` 约 16 MB）。
 
 > ⚠️ **不需要**拷贝 `reference/insightface/`（那只是参考源码），也**不需要**拷贝 `planB/` 这一层。把 `mine/` 整个目录拷过去即可。
 
@@ -41,7 +41,7 @@ mine\known_faces\
 
 双击 `mine/run_register.bat`，看到 `[done] 已保存 face_db.npz  共 X 人` 即成功。
 
-> 第一次部署时，`face_db.npz` 已经包含你这边注册过的 3 个人（demo_person / hcj / 洪伟X），不需要再注册。可以直接进步骤 4。
+> 第一次部署时，`face_db.npz` 已经包含你这边注册过的 5 个人（`demo_person / hcj / LiuYuShen / zhoKeWen / 洪伟X`），不需要再注册。可以直接进步骤 4。
 > 想换人 → 改 `known_faces/` 后再跑 `run_register.bat`（会覆盖 `face_db.npz`）。
 
 ## 步骤 4：开摄像头
@@ -83,7 +83,7 @@ mine/
 ├── test_recog_logic.py
 ├── face_db.npz        ← 人脸库
 ├── known_faces/       ← 源照片（可选，要不要带看隐私需求）
-├── models/            ← ONNX 模型（62 MB）
+├── models/            ← ONNX 模型（16 MB）
 │   └── buffalo_sc/
 ├── samples/
 ├── snapshots/

@@ -40,8 +40,7 @@ planB/
 │   ├── face_analysis_demo.py
 │   ├── test_recog_logic.py
 │   ├── face_db.npz        # 生成产物：人脸库 embedding
-│   ├── models/            # ★ ONNX 模型（跟项目走，~30 MB）
-│   │   ├── buffalo_sc.zip
+│   ├── models/            # ★ ONNX 模型（跟项目走，~16 MB）
 │   │   └── buffalo_sc/*.onnx
 │   ├── known_faces/       # 人脸库根目录
 │   │   ├── README.md
@@ -75,12 +74,13 @@ python -m pip install insightface opencv-python onnxruntime numpy
 
 **模型放在 `mine/models/` 下，跟项目走**（不进用户目录的 `~/.insightface/`）。
 
-首次运行会自动从 GitHub 下载 `buffalo_l.zip`（约 288 MB）到
-`mine/models/`，解压到 `mine/models/buffalo_l/*.onnx`。
+首次运行会自动从 GitHub 下载 `buffalo_sc.zip`（约 15 MB）到
+`mine/models/`，解压到 `mine/models/buffalo_sc/*.onnx`。
+zip 下载后可以删掉，**ONNX 文件是实际用到的**。
 
 > 下载不稳定时，可手动下载
-> `https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip`
-> 后解压到 `mine/models/`，再 `mine/models/buffalo_l.zip` 和 `buffalo_l/` 两个位置都要有。
+> `https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_sc.zip`
+> 后解压到 `mine/models/buffalo_sc/`。
 >
 > 想换到默认的 `~/.insightface/` 路径，把 `face_recog.py` 和 `face_analysis_demo.py` 里的
 > `root=ROOT` 删掉、`ROOT = SCRIPT_DIR` 改成 `ROOT = os.path.expanduser('~/.insightface')` 即可。
@@ -232,7 +232,7 @@ APP.prepare(ctx_id=0, det_size=(480, 480))
 
 | 项目              | 存储位置                                          | 是否敏感          | 建议                                       |
 | ----------------- | ------------------------------------------------- | ----------------- | ------------------------------------------ |
-| ONNX 模型         | `mine/models/buffalo_sc/*.onnx`                   | 否（公开模型）    | 公开仓库即可下载；已加入 `.gitignore`      |
+| ONNX 模型         | `mine/models/buffalo_sc/*.onnx`（解压后 16 MB）   | 否（公开模型）    | 公开仓库即可下载；已加入 `.gitignore`      |
 | 原始人脸照片      | `mine/known_faces/<名字>/*.jpg`                   | **是**            | 不要上传到云盘 / 仓库 / 聊天群              |
 | `face_db.npz`     | `mine/face_db.npz`                                | **是**            | 512 维向量，虽无法还原照片，但属生物特征     |
 | `out.mp4` 录像    | 运行时所在目录（建议在 `mine/` 下运行）           | **是**            | 用完及时删除                               |
