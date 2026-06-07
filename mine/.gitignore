@@ -12,6 +12,11 @@ backend/data/
 *.db
 *.db-journal
 
+# 人脸样本图片（含敏感面部数据），保留 demo_person 和 README
+known_faces/*
+!known_faces/README.md
+!known_faces/demo_person/
+
 # 摄像头快照（含人脸）
 snapshots/
 
