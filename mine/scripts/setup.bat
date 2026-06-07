@@ -35,7 +35,7 @@ if errorlevel 1 (
 echo.
 
 REM 3) Install dependencies
-echo [2/2] Installing dependencies (insightface / opencv / onnxruntime-directml / numpy)...
+echo [2/3] Installing dependencies from requirements.txt ...
 python -m pip install -r "%~dp0..\requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple
 if errorlevel 1 (
     echo.
@@ -49,10 +49,23 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM 4) Verify imports used by camera recognition and backend API
+echo.
+echo [3/3] Verifying runtime imports ...
+python -c "import insightface, cv2, PIL, onnxruntime, numpy, fastapi, uvicorn, multipart, pydantic"
+if errorlevel 1 (
+    echo.
+    echo [X] Dependency verification failed. Please check the error above.
+    pause
+    exit /b 1
+)
+
 echo.
 echo ============================================================
 echo  [OK] Installation complete
-echo  Next step: double-click scripts\run_camera.bat to start camera
+echo  Next steps:
+echo    - double-click scripts\run_backend.bat to start the web backend
+echo    - double-click scripts\run_camera.bat to start camera recognition
 echo ============================================================
 pause
 endlocal

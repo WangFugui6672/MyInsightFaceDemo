@@ -10,7 +10,7 @@ set PYTHONUTF8=1
 
 cd /d "%~dp0.."
 
-python -c "import uvicorn, fastapi" 2>nul
+python -c "import fastapi, uvicorn, multipart, pydantic" 2>nul
 if errorlevel 1 (
     echo [!] Backend dependencies not found. Please run scripts\setup.bat first.
     pause
