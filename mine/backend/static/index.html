@@ -3,659 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>人脸识别系统</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 24px; }
-h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; color: #f1f5f9; }
-.subtitle { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; }
-.dashboard { max-width: 1200px; margin: 0 auto; }
-
-.tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #334155; }
-.tabs button { padding: 10px 24px; background: none; border: none; color: #64748b; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
-.tabs button:hover { color: #94a3b8; }
-.tabs button.active { color: #38bdf8; border-bottom-color: #38bdf8; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-/* ---- Records (existing) ---- */
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.stat-card { background: #1e293b; border-radius: 10px; padding: 16px; border: 1px solid #334155; }
-.stat-card .value { font-size: 1.8rem; font-weight: 700; color: #38bdf8; }
-.stat-card .label { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
-.latest-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-.latest-card .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.latest-card .head h2 { font-size: 1rem; color: #64748b; font-weight: 500; }
-.latest-card .head .time { font-size: 0.85rem; color: #475569; }
-.latest-card .person { display: flex; align-items: center; gap: 16px; }
-.latest-card .avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; }
-.latest-card .avatar.known { background: #065f46; color: #6ee7b7; }
-.latest-card .avatar.unknown { background: #7f1d1d; color: #fca5a5; }
-.latest-card .info .name { font-size: 1.3rem; font-weight: 600; }
-.latest-card .info .name .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
-.latest-card .info .detail { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
-.table-wrap { background: #1e293b; border-radius: 10px; border: 1px solid #334155; overflow: hidden; }
-.table-wrap .table-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #334155; }
-.table-wrap .table-header h2 { font-size: 0.95rem; font-weight: 500; }
-.table-wrap .table-header .refresh { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 0.8rem; }
-.filters { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #334155; flex-wrap: wrap; }
-.filters input, .filters select { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 7px 12px; color: #e2e8f0; font-size: 0.85rem; outline: none; }
-.filters input:focus, .filters select:focus { border-color: #38bdf8; }
-.filters input { flex: 1; min-width: 160px; }
-.filters select { min-width: 110px; cursor: pointer; }
-.filters select option { background: #1e293b; }
-table { width: 100%; border-collapse: collapse; }
-th { text-align: left; padding: 10px 16px; font-size: 0.78rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #334155; }
-td { padding: 10px 16px; font-size: 0.9rem; border-bottom: 1px solid #1e293b; }
-tr:hover td { background: #0f172a40; }
-.tag-recognized { background: #065f46; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
-.tag-unknown { background: #7f1d1d; color: #fca5a5; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
-.score-bar { display: flex; align-items: center; gap: 8px; }
-.score-bar .bar { width: 60px; height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
-.score-bar .bar .fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
-.empty { text-align: center; padding: 48px; color: #475569; }
-.empty p { font-size: 1.1rem; margin-top: 8px; }
-.connecting { text-align: center; padding: 48px; color: #475569; }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-.connecting p { animation: pulse 1.5s infinite; }
-
-/* ---- Face DB ---- */
-.facedb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.facedb-header h2 { font-size: 1rem; font-weight: 500; color: #f1f5f9; }
-.btn { padding: 8px 18px; border-radius: 8px; border: none; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; font-weight: 500; }
-.btn-primary { background: #0ea5e9; color: #fff; }
-.btn-primary:hover { background: #0284c7; }
-.btn-success { background: #10b981; color: #fff; }
-.btn-success:hover { background: #059669; }
-.btn-danger { background: #ef4444; color: #fff; }
-.btn-danger:hover { background: #dc2626; }
-.btn-outline { background: transparent; border: 1px solid #334155; color: #94a3b8; }
-.btn-outline:hover { border-color: #38bdf8; color: #38bdf8; }
-.btn-sm { padding: 5px 12px; font-size: 0.78rem; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.person-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
-.person-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
-.person-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
-.person-card .thumb { width: 100%; height: 150px; object-fit: cover; background: #0f172a; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 2rem; }
-.person-card .info { padding: 12px; }
-.person-card .info .pname { font-weight: 600; font-size: 0.95rem; }
-.person-card .info .pcount { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-
-/* Person Detail */
-.detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-.detail-header .back { cursor: pointer; color: #64748b; font-size: 0.9rem; padding: 4px 10px; border-radius: 6px; border: 1px solid #334155; background: none; transition: 0.2s; }
-.detail-header .back:hover { color: #38bdf8; border-color: #38bdf8; }
-.detail-header h2 { font-size: 1.3rem; font-weight: 600; }
-.detail-header .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-
-.img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
-.img-card { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid #334155; background: #0f172a; }
-.img-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
-.img-card .img-name { padding: 6px 10px; font-size: 0.78rem; color: #64748b; background: #1e293b; }
-.img-card .img-del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); border: none; color: #fca5a5; width: 26px; height: 26px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
-.img-card:hover .img-del { opacity: 1; }
-.img-card .img-del:hover { background: #ef4444; color: #fff; }
-
-.upload-area { border: 2px dashed #334155; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 20px; }
-.upload-area:hover, .upload-area.dragover { border-color: #38bdf8; background: #1e293b50; }
-.upload-area p { color: #64748b; font-size: 0.9rem; }
-.upload-area p strong { color: #94a3b8; }
-
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 28px; width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
-.modal h3 { font-size: 1.1rem; margin-bottom: 16px; }
-.modal label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; }
-.modal input[type="text"] { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 0.9rem; outline: none; margin-bottom: 16px; }
-.modal input[type="text"]:focus { border-color: #38bdf8; }
-.modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-.modal .webcam-box { position: relative; width: 100%; max-width: 400px; margin: 0 auto 16px; border-radius: 10px; overflow: hidden; background: #0f172a; }
-.modal .webcam-box video { width: 100%; display: block; }
-.modal .webcam-box canvas { display: none; }
-.modal .webcam-actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
-.modal .captured-preview { text-align: center; margin-bottom: 16px; }
-.modal .captured-preview img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #334155; }
-
-.toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px 20px; font-size: 0.9rem; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-.toast.success { border-color: #10b981; }
-.toast.error { border-color: #ef4444; }
-.toast.info { border-color: #38bdf8; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-.hidden { display: none !important; }
-.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #334155; border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
+<title>本地人脸识别控制台</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="dashboard">
-  <h1>人脸识别系统</h1>
-  <div class="subtitle">InsightFace · 实时识别 · 数据库管理</div>
+<main class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow"><span class="dot"></span><span>InsightFace Local Console</span></div>
+      <h1>本地人脸识别控制台</h1>
+      <p class="subtitle">管理本地人脸库、查看识别记录，并把摄像头识别结果沉淀到本机 SQLite 数据库。</p>
+    </div>
+    <div class="status-pill"><span class="dot"></span><span id="serverStatus">等待后端响应</span></div>
+  </header>
 
-  <div class="tabs">
+  <nav class="tabs" aria-label="控制台导航">
     <button class="active" data-tab="records">识别记录</button>
     <button data-tab="facedb">人脸库</button>
-  </div>
+  </nav>
 
-  <!-- Tab: Records -->
-  <div class="tab-content active" id="tab-records">
+  <section class="tab-content active" id="tab-records">
     <div class="stats" id="stats"></div>
     <div class="latest-card" id="latest"></div>
-    <div class="table-wrap">
+    <section class="table-wrap">
       <div class="table-header">
-        <h2>识别记录</h2>
-        <div class="refresh"><span id="countLabel">0 条记录</span><span>·</span><span>实时</span></div>
+        <h2>识别流水</h2>
+        <div class="refresh"><span id="countLabel">0 条记录</span><span>实时刷新</span></div>
       </div>
       <div class="filters">
-        <input type="text" id="searchName" placeholder="搜索姓名..." oninput="applyFilters()">
+        <input type="text" id="searchName" placeholder="搜索姓名" oninput="applyFilters()">
         <select id="filterStatus" onchange="applyFilters()">
           <option value="">全部状态</option>
           <option value="recognized">已识别</option>
           <option value="unknown">未识别</option>
         </select>
-        <select id="filterCamera" onchange="applyFilters()"><option value="">全部摄像头</option></select>
+        <select id="filterCamera" onchange="applyFilters()">
+          <option value="">全部摄像头</option>
+        </select>
       </div>
-      <table><thead><tr>
-        <th>ID</th><th>姓名</th><th>置信度</th><th>状态</th><th>摄像头</th><th>时间</th>
-      </tr></thead><tbody id="records"></tbody></table>
-      <div class="empty" id="empty"><p>暂无识别记录</p></div>
-      <div class="connecting" id="connecting"><p>正在连接后端...</p></div>
-    </div>
-  </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>姓名</th>
+              <th>置信度</th>
+              <th>状态</th>
+              <th>摄像头</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody id="records"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empty"><strong>暂无识别记录</strong><span>启动摄像头识别并连接后端后，这里会自动更新。</span></div>
+      <div class="connecting" id="connecting"><strong>正在连接后端</strong><span>请确认 run_backend.bat 已启动。</span></div>
+    </section>
+  </section>
 
-  <!-- Tab: Face DB -->
-  <div class="tab-content" id="tab-facedb">
+  <section class="tab-content" id="tab-facedb">
     <div class="facedb-header">
-      <h2 id="facedb-title">所有人脸</h2>
-      <div style="display:flex;gap:8px">
+      <h2 class="section-title" id="facedb-title">所有人员</h2>
+      <div class="header-actions">
         <button class="btn btn-outline btn-sm" onclick="refreshFaces()">刷新</button>
-        <button class="btn btn-primary btn-sm" onclick="showNewPersonModal()">+ 添加新人</button>
+        <button class="btn btn-primary btn-sm" onclick="showNewPersonModal()">新增人员</button>
         <button class="btn btn-success btn-sm" id="rebuildBtn" onclick="rebuildDB()">重新注册</button>
       </div>
     </div>
     <div id="facedb-list"></div>
     <div id="facedb-detail" class="hidden"></div>
-  </div>
-</div>
+  </section>
+</main>
 
-<!-- New Person Modal -->
 <div id="newPersonModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h3>添加新人</h3>
-    <label>姓名</label>
+    <h3>新增人员</h3>
+    <label for="newPersonName">姓名</label>
     <input type="text" id="newPersonName" placeholder="输入姓名" maxlength="50">
-    <label>拍照或上传照片</label>
+    <label>拍照采集</label>
     <div class="webcam-box">
       <video id="newPersonVideo" autoplay playsinline></video>
       <canvas id="newPersonCanvas"></canvas>
     </div>
     <div class="webcam-actions">
-      <button class="btn btn-outline btn-sm" id="startCamBtn" onclick="startCapture('newPerson')">📷 打开摄像头</button>
-      <button class="btn btn-primary btn-sm" id="captureBtn" onclick="capturePhoto('newPerson')">拍照</button>
+      <button class="btn btn-outline btn-sm" onclick="startCapture('newPerson')">打开摄像头</button>
+      <button class="btn btn-primary btn-sm" onclick="capturePhoto('newPerson')">拍照</button>
     </div>
     <div class="captured-preview" id="newPersonPreview"></div>
-    <div>
-      <label>或选择文件</label>
-      <input type="file" id="newPersonFiles" accept="image/*" multiple>
-    </div>
+    <label for="newPersonFiles">上传照片</label>
+    <input type="file" id="newPersonFiles" accept="image/*" multiple>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">取消</button>
-      <button class="btn btn-success" id="savePersonBtn" onclick="saveNewPerson()">保存</button>
+      <button class="btn btn-primary" id="savePersonBtn" onclick="saveNewPerson()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- Add Images Modal -->
 <div id="addImagesModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h3 id="addImagesTitle">添加图片</h3>
-    <label>拍照</label>
+    <h3 id="addImagesTitle">添加照片</h3>
+    <label>拍照采集</label>
     <div class="webcam-box">
       <video id="addImagesVideo" autoplay playsinline></video>
       <canvas id="addImagesCanvas"></canvas>
     </div>
     <div class="webcam-actions">
-      <button class="btn btn-outline btn-sm" onclick="startCapture('addImages')">📷 打开摄像头</button>
+      <button class="btn btn-outline btn-sm" onclick="startCapture('addImages')">打开摄像头</button>
       <button class="btn btn-primary btn-sm" onclick="capturePhoto('addImages')">拍照</button>
     </div>
     <div class="captured-preview" id="addImagesPreview"></div>
-    <div>
-      <label>或选择文件</label>
-      <input type="file" id="addImagesFiles" accept="image/*" multiple>
-    </div>
+    <label for="addImagesFiles">上传照片</label>
+    <input type="file" id="addImagesFiles" accept="image/*" multiple>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">取消</button>
-      <button class="btn btn-success" id="saveImagesBtn" onclick="saveImages()">保存</button>
+      <button class="btn btn-primary" id="saveImagesBtn" onclick="saveImages()">保存</button>
     </div>
   </div>
 </div>
 
-<script>
-const HOST = location.origin;
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-
-// ---- Toast ----
-function toast(msg, type = 'info') {
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
-
-// ---- Tabs ----
-$$('.tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    $$('.tabs button').forEach(b => b.classList.remove('active'));
-    $$('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    $(`#tab-${btn.dataset.tab}`).classList.add('active');
-    if (btn.dataset.tab === 'facedb') refreshFaces();
-  });
-});
-
-// ---- Modal ----
-function closeModal() {
-  $$('.modal-overlay').forEach(m => m.classList.add('hidden'));
-  stopCapture('newPerson');
-  stopCapture('addImages');
-}
-
-// ---- Webcam capture ----
-let streams = {};
-
-function stopCapture(prefix) {
-  if (streams[prefix]) {
-    streams[prefix].getTracks().forEach(t => t.stop());
-    delete streams[prefix];
-  }
-  const video = $(`#${prefix}Video`);
-  if (video) video.style.display = 'none';
-  const canvas = $(`#${prefix}Canvas`);
-  if (canvas) canvas.style.display = 'none';
-}
-
-async function startCapture(prefix) {
-  const video = $(`#${prefix}Video`);
-  const canvas = $(`#${prefix}Canvas`);
-  try {
-    stopCapture(prefix);
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    streams[prefix] = s;
-    video.srcObject = s;
-    video.style.display = 'block';
-    canvas.style.display = 'none';
-  } catch { toast('无法打开摄像头', 'error'); }
-}
-
-function capturePhoto(prefix) {
-  const video = $(`#${prefix}Video`);
-  const canvas = $(`#${prefix}Canvas`);
-  const preview = $(`#${prefix}Preview`);
-  if (!streams[prefix]) { toast('请先打开摄像头', 'error'); return; }
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  preview.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.9)}">`;
-  canvas.style.display = 'block';
-}
-
-function getCapturedBlob(prefix) {
-  const canvas = $(`#${prefix}Canvas`);
-  if (!canvas || canvas.style.display === 'none') return null;
-  return new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/jpeg', 0.9));
-}
-
-// ---- Face DB ----
-let currentPerson = null;
-
-async function refreshFaces() {
-  const list = $('#facedb-list');
-  const detail = $('#facedb-detail');
-  detail.classList.add('hidden');
-  list.classList.remove('hidden');
-  $('#facedb-title').textContent = '所有人脸';
-  try {
-    const resp = await fetch(`${HOST}/api/persons`);
-    const persons = await resp.json();
-    if (!persons.length) {
-      list.innerHTML = '<div class="empty"><p>人脸库为空</p></div>';
-      return;
-    }
-    list.innerHTML = `<div class="person-grid">${persons.map(p => {
-      const src = p.images.length ? `${HOST}/api/images/${encodeURIComponent(p.name)}/${encodeURIComponent(p.images[0])}` : '';
-      return `<div class="person-card" onclick="showPerson('${encodeURIComponent(p.name)}')">
-        ${src ? `<img class="thumb" src="${src}" alt="${p.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="thumb" style="display:none">?</div>` : `<div class="thumb">?</div>`}
-        <div class="info">
-          <div class="pname">${p.name}</div>
-          <div class="pcount">${p.image_count} 张照片</div>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
-  } catch { list.innerHTML = '<div class="empty"><p>连接失败</p></div>'; }
-}
-
-async function showPerson(encodedName) {
-  const name = decodeURIComponent(encodedName);
-  currentPerson = name;
-  const list = $('#facedb-list');
-  const detail = $('#facedb-detail');
-  list.classList.add('hidden');
-  detail.classList.remove('hidden');
-  $('#facedb-title').textContent = name;
-  try {
-    const resp = await fetch(`${HOST}/api/persons/${encodeURIComponent(name)}`);
-    const p = await resp.json();
-    detail.innerHTML = `
-      <div class="detail-header">
-        <button class="back" onclick="backToFaces()">← 返回</button>
-        <h2>${p.name}</h2>
-        <span style="color:#64748b;font-size:0.85rem">${p.image_count} 张照片</span>
-        <div class="actions">
-          <button class="btn btn-outline btn-sm" onclick="renamePerson('${encodeURIComponent(p.name)}')">重命名</button>
-          <button class="btn btn-primary btn-sm" onclick="showAddImagesModal('${encodeURIComponent(p.name)}')">+ 添加图片</button>
-          <button class="btn btn-success btn-sm" onclick="rebuildDB()">重新注册</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePerson('${encodeURIComponent(p.name)}')">删除此人</button>
-        </div>
-      </div>
-      <div class="upload-area" onclick="document.getElementById('detailFileInput').click()">
-        <p>点击或拖拽图片到此处上传 <strong>(支持多张)</strong></p>
-        <input type="file" id="detailFileInput" accept="image/*" multiple style="display:none" onchange="uploadDetailFiles('${encodeURIComponent(p.name)}', this)">
-      </div>
-      ${p.images.length ? `<div class="img-grid">${p.images.map(f =>
-        `<div class="img-card">
-          <img src="${HOST}/api/images/${encodeURIComponent(p.name)}/${encodeURIComponent(f)}" alt="${f}">
-          <div class="img-name">${f}</div>
-          <button class="img-del" onclick="deleteImage('${encodeURIComponent(p.name)}','${encodeURIComponent(f)}')">✕</button>
-        </div>`
-      ).join('')}</div>` : '<div class="empty"><p>暂无照片</p></div>'}
-    `;
-  } catch { toast('加载失败', 'error'); }
-}
-
-function backToFaces() {
-  currentPerson = null;
-  refreshFaces();
-}
-
-// ---- Upload via drag-drop on detail area ----
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', async e => {
-  e.preventDefault();
-  if (!currentPerson) return;
-  const files = e.dataTransfer.files;
-  if (!files.length) return;
-  await uploadFiles(currentPerson, files);
-});
-
-// ---- CRUD ----
-async function uploadFiles(personName, files, cb) {
-  const fd = new FormData();
-  let count = 0;
-  for (const f of files) {
-    if (f.type.startsWith('image/')) { fd.append('files', f); count++; }
-  }
-  if (!count) { toast('没有有效的图片文件', 'error'); return; }
-  try {
-    const resp = await fetch(`${HOST}/api/persons/${encodeURIComponent(personName)}/images`, { method: 'POST', body: fd });
-    const r = await resp.json();
-    toast(`已保存 ${r.images_saved} 张图片 ⚠ 需重新注册`, 'success');
-    if (cb) cb();
-    else showPerson(encodeURIComponent(personName));
-  } catch { toast('上传失败', 'error'); }
-}
-
-async function renamePerson(encodedName) {
-  const oldName = decodeURIComponent(encodedName);
-  const newName = prompt(`将「${oldName}」重命名为：`, oldName);
-  if (!newName || newName === oldName) return;
-  if (!/^[^\\\/:*?"<>|]+$/.test(newName)) { toast('姓名包含非法字符', 'error'); return; }
-  const fd = new FormData();
-  fd.append('new_name', newName);
-  try {
-    const resp = await fetch(`${HOST}/api/persons/${encodedName}/rename`, { method: 'PUT', body: fd });
-    const r = await resp.json();
-    if (resp.ok) {
-      toast(`✅ ${r.message}`, 'success');
-      refreshFaces();
-    } else {
-      toast(r.error || '重命名失败', 'error');
-    }
-  } catch { toast('请求失败', 'error'); }
-}
-
-async function uploadDetailFiles(encodedName, input) {
-  const files = input.files;
-  if (!files.length) return;
-  await uploadFiles(decodeURIComponent(encodedName), files);
-  input.value = '';
-}
-
-async function deleteImage(encodedName, encodedFile) {
-  if (!confirm('确定删除这张照片？')) return;
-  try {
-    await fetch(`${HOST}/api/persons/${encodedName}/images/${encodedFile}`, { method: 'DELETE' });
-    toast('已删除 ⚠ 需重新注册', 'success');
-    showPerson(encodedName);
-  } catch { toast('删除失败', 'error'); }
-}
-
-async function deletePerson(encodedName) {
-  if (!confirm(`确定删除「${decodeURIComponent(encodedName)}」及其所有照片？`)) return;
-  if (!confirm('此操作不可恢复！再次确认？')) return;
-  try {
-    await fetch(`${HOST}/api/persons/${encodedName}`, { method: 'DELETE' });
-    toast('已删除', 'success');
-    backToFaces();
-  } catch { toast('删除失败', 'error'); }
-}
-
-async function rebuildDB() {
-  if (!confirm('添加新人、重命名、增删图片后都需要重新注册，才能让识别生效。\n确认现在重新注册？')) return;
-  const btn = $('#rebuildBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>注册中...';
-  try {
-    const resp = await fetch(`${HOST}/api/register`, { method: 'POST' });
-    const r = await resp.json();
-    if (r.ok) toast('注册成功: ' + (r.message || ''), 'success');
-    else toast('注册失败: ' + (r.stderr || ''), 'error');
-  } catch { toast('注册请求失败', 'error'); }
-  btn.disabled = false;
-  btn.textContent = '重新注册';
-}
-
-// ---- New Person Modal ----
-function showNewPersonModal() {
-  $('#newPersonName').value = '';
-  $('#newPersonPreview').innerHTML = '';
-  $('#newPersonFiles').value = '';
-  stopCapture('newPerson');
-  $('#newPersonModal').classList.remove('hidden');
-}
-
-async function saveNewPerson() {
-  const name = $('#newPersonName').value.trim();
-  if (!name) { toast('请输入姓名', 'error'); return; }
-  const fd = new FormData();
-  fd.append('name', name);
-
-  const blob = await getCapturedBlob('newPerson');
-  if (blob) fd.append('files', blob, 'capture.jpg');
-
-  const fileInput = $('#newPersonFiles');
-  for (const f of fileInput.files) fd.append('files', f);
-
-  const btn = $('#savePersonBtn');
-  btn.disabled = true;
-  btn.textContent = '保存中...';
-  try {
-    const resp = await fetch(`${HOST}/api/persons`, { method: 'POST', body: fd });
-    if (resp.status === 409) { toast('该姓名已存在', 'error'); btn.disabled = false; btn.textContent = '保存'; return; }
-    if (!resp.ok) { toast('保存失败', 'error'); btn.disabled = false; btn.textContent = '保存'; return; }
-    toast(`已添加「${name}」 ⚠ 点击「重新注册」后识别才生效`, 'success');
-    closeModal();
-    refreshFaces();
-  } catch { toast('请求失败', 'error'); }
-  btn.disabled = false;
-  btn.textContent = '保存';
-}
-
-// ---- Add Images Modal ----
-function showAddImagesModal(encodedName) {
-  $('#addImagesTitle').textContent = `为「${decodeURIComponent(encodedName)}」添加图片`;
-  $('#addImagesPreview').innerHTML = '';
-  $('#addImagesFiles').value = '';
-  stopCapture('addImages');
-  $('#addImagesModal').dataset.person = encodedName;
-  $('#addImagesModal').classList.remove('hidden');
-}
-
-async function saveImages() {
-  const encodedName = $('#addImagesModal').dataset.person;
-  const name = decodeURIComponent(encodedName);
-  const fd = new FormData();
-
-  const blob = await getCapturedBlob('addImages');
-  if (blob) fd.append('files', blob, 'capture.jpg');
-
-  const fileInput = $('#addImagesFiles');
-  for (const f of fileInput.files) fd.append('files', f);
-
-  const btn = $('#saveImagesBtn');
-  btn.disabled = true;
-  btn.textContent = '保存中...';
-  try {
-    const resp = await fetch(`${HOST}/api/persons/${encodedName}/images`, { method: 'POST', body: fd });
-    const r = await resp.json();
-    toast(`已保存 ${r.images_saved} 张图片 ⚠ 需重新注册`, 'success');
-    closeModal();
-    showPerson(encodedName);
-  } catch { toast('上传失败', 'error'); }
-  btn.disabled = false;
-  btn.textContent = '保存';
-}
-
-// ---- Records (existing) ----
-let recData = [];
-let recFiltered = [];
-
-function scoreColor(s) {
-  if (s >= 0.4) return '#6ee7b7';
-  if (s >= 0.3) return '#fde047';
-  return '#fca5a5';
-}
-
-function populateCameras(rows) {
-  const sel = $('#filterCamera');
-  const cur = sel.value;
-  const ids = [...new Set(rows.map(r => r.camera_id))].sort();
-  sel.innerHTML = '<option value="">全部摄像头</option>' + ids.map(i => `<option value="${i}">摄像头 #${i}</option>`).join('');
-  if (cur) sel.value = cur;
-}
-
-function applyFilters() {
-  const q = $('#searchName').value.trim().toLowerCase();
-  const st = $('#filterStatus').value;
-  const cam = $('#filterCamera').value;
-  recFiltered = recData.filter(r => {
-    if (q && !r.name.toLowerCase().includes(q)) return false;
-    if (st && r.status !== st) return false;
-    if (cam && r.camera_id !== parseInt(cam)) return false;
-    return true;
-  });
-  renderStats(recData, recFiltered);
-  renderLatest(recFiltered);
-  renderTable(recFiltered);
-}
-
-function renderStats(all, rows) {
-  const total = rows.length;
-  const unique = new Set(rows.filter(r => r.status === 'recognized').map(r => r.name)).size;
-  const known = rows.filter(r => r.status === 'recognized').length;
-  updateCount(rows);
-  $('#stats').innerHTML = `
-    <div class="stat-card"><div class="value">${total}</div><div class="label">总记录</div></div>
-    <div class="stat-card"><div class="value">${unique}</div><div class="label">认识的人</div></div>
-    <div class="stat-card"><div class="value">${known}</div><div class="label">已识别</div></div>
-    <div class="stat-card"><div class="value">${total - known}</div><div class="label">未识别</div></div>`;
-}
-
-function renderLatest(rows) {
-  if (!rows.length) { $('#latest').style.display = 'none'; return; }
-  $('#latest').style.display = 'block';
-  const r = rows[0];
-  const known = r.status === 'recognized';
-  $('#latest').innerHTML = `
-    <div class="head">
-      <h2>最新识别</h2>
-      <div class="time">${r.created_at}</div>
-    </div>
-    <div class="person">
-      <div class="avatar ${known ? 'known' : 'unknown'}">${known ? r.name[0] : '?'}</div>
-      <div class="info">
-        <div class="name">${r.name}<span class="tag" style="background:${known ? '#065f46' : '#7f1d1d'};color:${known ? '#6ee7b7' : '#fca5a5'}">${r.status}</span></div>
-        <div class="detail">置信度: ${r.score.toFixed(3)}  ·  摄像头 #${r.camera_id}  ·  ${r.timestamp}</div>
-      </div>
-    </div>`;
-}
-
-function updateCount(rows) {
-  $('#countLabel').textContent = `${rows.length} / ${recData.length} 条记录`;
-}
-
-function renderTable(rows) {
-  const tbody = $('#records');
-  const empty = $('#empty');
-  if (!rows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = rows.map(r => {
-    const known = r.status === 'recognized';
-    return `<tr>
-      <td style="color:#64748b">${r.id}</td>
-      <td><strong>${r.name}</strong></td>
-      <td><div class="score-bar"><span>${r.score.toFixed(3)}</span><div class="bar"><div class="fill" style="width:${Math.min(r.score * 100, 100)}%;background:${scoreColor(r.score)}"></div></div></div></td>
-      <td><span class="tag-${known ? 'recognized' : 'unknown'}">${r.status}</span></td>
-      <td style="color:#94a3b8">摄像头 #${r.camera_id}</td>
-      <td style="color:#94a3b8;font-size:0.8rem">${r.timestamp}</td>
-    </tr>`;
-  }).join('');
-}
-
-async function fetchRecords() {
-  try {
-    const resp = await fetch(`${HOST}/api/recognitions?limit=100`);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    recData = await resp.json();
-    $('#connecting').style.display = 'none';
-    populateCameras(recData);
-    applyFilters();
-  } catch {
-    $('#connecting').style.display = 'block';
-    $('#records').innerHTML = '';
-    $('#empty').style.display = 'none';
-    $('#stats').innerHTML = '';
-    $('#latest').style.display = 'none';
-  }
-}
-
-fetchRecords();
-setInterval(fetchRecords, 3000);
-refreshFaces();
-
-// ---- Drag-drop on person detail upload area ----
-document.addEventListener('drop', async e => {
-  const detail = $('#facedb-detail');
-  if (detail.classList.contains('hidden')) return;
-  if (!currentPerson) return;
-  e.preventDefault();
-  const files = e.dataTransfer.files;
-  if (!files.length) return;
-  await uploadFiles(currentPerson, files, () => showPerson(encodeURIComponent(currentPerson)));
-});
-</script>
+<script src="/static/app.js" defer></script>
 </body>
 </html>

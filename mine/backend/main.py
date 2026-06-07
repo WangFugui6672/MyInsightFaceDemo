@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 
 BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "recognition.db"
 
@@ -22,6 +23,8 @@ FACE_DB_PATH = PROJECT_DIR / "face_db.npz"
 IMG_EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
 
 app = FastAPI(title="Face Recognition Backend", version="1.0.0")
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 if KNOWN_FACES_DIR.is_dir():
     app.mount("/api/images", StaticFiles(directory=str(KNOWN_FACES_DIR)), name="faces")
@@ -83,7 +86,7 @@ def on_startup() -> None:
 
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(str(BASE_DIR / "static" / "index.html"))
+    return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 @app.get("/health")
