@@ -1,6 +1,6 @@
 # 识别结果后端接口
 
-本目录是 FastAPI + SQLite 后端，用于接收 `face_recog.py` 发送的人脸识别结果，并保存到本地数据库。
+本目录是 FastAPI + SQLite 后端，用于接收 `face_recog.py` 发送的人脸识别结果，并保存到本地数据库。根路径 `/` 会打开本地网页看板，静态文件在 `backend/static/`。
 
 ## 数据库存储位置
 
@@ -26,6 +26,12 @@ python -m pip install -r requirements.txt
 ```powershell
 cd mine
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+网页看板：
+
+```text
+http://127.0.0.1:8000/
 ```
 
 接口文档：

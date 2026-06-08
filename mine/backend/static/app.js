@@ -480,10 +480,11 @@ function renderTable(rows) {
   tbody.innerHTML = rows.map(r => {
     const known = r.status === 'recognized';
     const score = Number(r.score || 0);
+    const safeName = escapeHtml(r.name);
     return `<tr>
       <td style="color:var(--faint)">${r.id}</td>
-      <td><strong>${escapeHtml(r.name)}</strong></td>
-      <td><div class="score-bar"><span>${score.toFixed(3)}</span><div class="bar"><div class="fill" style="width:${Math.min(Math.max(score, 0) * 100, 100)}%;background:${scoreColor(score)}"></div></div></div></td>
+      <td><span class="record-name ${known ? '' : 'unknown'}" title="${safeName}"><span class="record-name-text">${safeName}</span></span></td>
+      <td><div class="score-bar"><span class="score-value">${score.toFixed(3)}</span><div class="bar"><div class="fill" style="width:${Math.min(Math.max(score, 0) * 100, 100)}%;background:${scoreColor(score)}"></div></div></div></td>
       <td><span class="tag ${known ? 'recognized' : 'unknown'}">${statusText(r.status)}</span></td>
       <td style="color:var(--muted)">摄像头 #${r.camera_id}</td>
       <td style="color:var(--muted);font-size:13px">${escapeHtml(r.timestamp || '')}</td>

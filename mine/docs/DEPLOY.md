@@ -4,11 +4,11 @@
 
 ## 步骤 1：拷贝文件夹
 
-把整个 `mine/` 文件夹复制到目标机器（U盘、网盘、共享文件夹都行）。
+把整个 `mine/` 文件夹复制到目标机器（U 盘、网盘、共享文件夹都行）。
 
 **整个 mine/ 大约 30 MB**（绝大部分是 `models/buffalo_sc/*.onnx` 约 16 MB）。
 
-> ⚠️ **不需要**拷贝 `reference/insightface/`（那只是参考源码），也**不需要**拷贝 `planB/` 这一层。把 `mine/` 整个目录拷过去即可。
+> 不需要拷贝 `reference/insightface/`（那只是参考源码），也不需要拷贝 `faceRecognition/` 这一层。把 `mine/` 整个目录拷过去即可。
 
 ## 步骤 2：第一次运行 setup.bat
 
@@ -18,11 +18,15 @@
 [OK] Python 已安装
 Python 3.14.0
 
-[1/2] 升级 pip ...
-[2/2] 安装依赖（insightface / opencv / onnxruntime-directml / numpy）...
+[1/2] Upgrading pip ...
+[2/3] Installing dependencies from requirements.txt ...
 ...
-[OK] 安装完成
-下一步：双击 scripts/run_camera.bat 启动摄像头识别
+[3/3] Verifying runtime imports ...
+
+[OK] Installation complete
+Next steps:
+  - double-click scripts\run_backend.bat to start the web backend
+  - double-click scripts\run_camera.bat to start camera recognition
 ```
 
 大约 1~3 分钟（取决于网络）。
@@ -44,7 +48,21 @@ mine\known_faces\
 > 第一次部署时，`face_db.npz` 已经包含你这边注册过的 5 个人（`demo_person / hcj / LiuYuShen / zhoKeWen / 洪伟X`），不需要再注册。可以直接进步骤 4。
 > 想换人 → 改 `known_faces/` 后再跑 `scripts/run_register.bat`（会覆盖 `face_db.npz`）。
 
-## 步骤 4：开摄像头
+## 步骤 4：启动网页后端
+
+双击 `mine/scripts/run_backend.bat`，打开浏览器访问：
+
+```text
+http://127.0.0.1:8000/
+```
+
+API 文档地址：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## 步骤 5：开摄像头
 
 双击 `mine/scripts/run_camera.bat`：
 
@@ -64,6 +82,7 @@ mine\known_faces\
 | 双击 `scripts/setup.bat` 闪退 | 右键 → 编辑，看不到内容是因为 console 关太快。改用 cmd 进入 `mine/` 运行 `scripts\setup.bat` 看报错 |
 | 双击 .bat 时中文乱码 | `scripts/setup.bat` 顶部已加 `chcp 65001`；如果还乱码说明 Windows 不是中文版系统，需要把 bat 里所有中文改成英文 |
 | Python 不在 PATH | 重新装 Python，安装时勾上"Add Python to PATH" |
+| 后端网页打不开 | 确认 `scripts/run_backend.bat` 窗口没有报错；默认地址是 `http://127.0.0.1:8000/` |
 | 摄像头打不开 | Windows 设置 → 隐私 → 摄像头 → 允许桌面应用访问摄像头 |
 | 模型加载慢（首次） | 第一次会从 `models/` 加载 ONNX 到内存，后续秒开 |
 
@@ -81,10 +100,12 @@ mine/
 ├── scripts/           ← 双击脚本
 │   ├── setup.bat          ← 双击 ① 装依赖
 │   ├── run_register.bat   ← 双击 ② 注册人脸
-│   └── run_camera.bat     ← 双击 ③ 开摄像头
+│   ├── run_backend.bat    ← 双击 ③ 启动网页后端
+│   └── run_camera.bat     ← 双击 ④ 开摄像头
 ├── face_recog.py
 ├── face_analysis_demo.py
 ├── test_recog_logic.py
+├── backend/           ← 后端网页、API、SQLite 数据库
 ├── face_db.npz        ← 人脸库
 ├── known_faces/       ← 源照片（可选，要不要带看隐私需求）
 ├── models/            ← ONNX 模型（16 MB）
